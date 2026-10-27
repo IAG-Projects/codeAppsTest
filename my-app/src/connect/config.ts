@@ -12,7 +12,7 @@ export const ROLE_SOURCE: 'test' | 'entra' = 'test';
 /** Used when ROLE_SOURCE === 'test'. Lower-case emails.
  *  Leave BOTH empty to make whoever opens the app a Directory Administrator,
  *  which is the quickest way to see every screen. */
-export const ADMIN_EMAILS: string[] = [];
+export const ADMIN_EMAILS: string[] = ['lklmssvc@deloitte.com','abotejue@deloitte.com'];
 export const STEWARD_EMAILS: string[] = [];
 
 /** Used when ROLE_SOURCE === 'entra'. Entra group object ids. */

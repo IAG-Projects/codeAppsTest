@@ -11,5 +11,33 @@ export const dataSourcesInfo = {
     "primaryKey": "crcf4_cdb_datamodelid",
     "dataSourceType": "Dataverse",
     "apis": {}
+  },
+  "roles": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "roleid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "systemuserrolescollection": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "systemuserroleid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "teammemberships": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "teammembershipid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
+  "teamrolescollection": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "teamroleid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
   }
 };

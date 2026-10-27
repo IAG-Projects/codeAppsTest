@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "appId": null,
+  "appId": "d9312a70-f75f-4fb9-9f81-1f8ead1a780c",
   "appDisplayName": "CodeApptest",
   "region": "prod",
   "appType": "CodeApp",
@@ -22,6 +22,26 @@
         "environment_39a902ba": {
           "entitySetName": "Environment",
           "logicalName": "environment_39a902ba",
+          "isHidden": false
+        },
+        "securityroles": {
+          "entitySetName": "roles",
+          "logicalName": "role",
+          "isHidden": false
+        },
+        "systemuserroles": {
+          "entitySetName": "systemuserrolescollection",
+          "logicalName": "systemuserroles",
+          "isHidden": false
+        },
+        "teammembership": {
+          "entitySetName": "teammemberships",
+          "logicalName": "teammembership",
+          "isHidden": false
+        },
+        "teamroles": {
+          "entitySetName": "teamrolescollection",
+          "logicalName": "teamroles",
           "isHidden": false
         }
       },
