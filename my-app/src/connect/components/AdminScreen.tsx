@@ -3,7 +3,7 @@ import { ContactsService, rowId, type ContactRow } from '../dataSource';
 import { C, displayName, text } from '../schema';
 import { useContacts, EMPTY_FILTERS } from '../useContacts';
 import { exportFiltered } from '../exportCsv';
-import { EXPORT_LIMIT, ROLE_SOURCE } from '../config';
+import { EXPORT_LIMIT, ROLE_NAMES } from '../config';
 import type { Identity, Role } from '../useRole';
 
 interface AdminScreenProps {
@@ -63,21 +63,16 @@ export function AdminScreen({ identity, role, onOpen, notify }: AdminScreenProps
           <div className="info"><small>RESOLVED ROLE</small><b>{identity.realRole}</b></div>
           <div className="info">
             <small>ROLE SOURCE</small>
-            <b>
-              {identity.testMode
-                ? 'None configured — everyone is an administrator'
-                : ROLE_SOURCE === 'entra'
-                  ? 'Microsoft Entra ID security groups'
-                  : 'Email lists in config.ts'}
-            </b>
+            <b>Dataverse security roles</b>
           </div>
-          {identity.testMode && (
-            <div className="notice warn">
-              No role source is configured, so this is not enforced access. Set
-              ADMIN_EMAILS and STEWARD_EMAILS in <code className="k">config.ts</code>,
-              or switch to Entra groups.
-            </div>
-          )}
+          <div className="info">
+            <small>ROLES THAT COUNT</small>
+            <b>{ROLE_NAMES.admin} · {ROLE_NAMES.steward}</b>
+          </div>
+          <div className="info">
+            <small>YOU HOLD</small>
+            <b>{identity.heldRoles.join(' · ') || 'neither'}</b>
+          </div>
           <p className="muted">
             Whatever this screen shows, what a person can actually reach is
             decided by their Dataverse security role on the table — not by this

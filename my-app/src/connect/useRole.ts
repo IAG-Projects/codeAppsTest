@@ -1,58 +1,80 @@
 /* ===========================================================================
  * useRole.ts — who is signed in, and what they're allowed to do
  * ===========================================================================
- * The identity comes straight from the Power Apps host context, which the
- * provider has already awaited. No WhoAmI call and no systemuser table: the
- * host hands us the display name and UPN directly.
+ * Identity comes straight from the Power Apps host context (no WhoAmI call,
+ * no systemuser table). The ROLE comes from Dataverse security roles — see
+ * roles.ts — and is read once per sign-in.
+ *
+ * Until that read finishes `loading` is true and the app shows nothing role
+ * dependent. If it fails, the user is treated as a Firm User and `roleProblem`
+ * says why; a failure never grants more access.
  * ======================================================================== */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { usePowerContext } from '../PowerProvider';
-import { ADMIN_EMAILS, STEWARD_EMAILS } from './config';
+import { fetchRoleMembership } from './roles';
+import { roleFromMembership, type Role, type RoleMembership } from './roleLogic';
 
-export type Role = 'Firm User' | 'Data Steward' | 'Directory Administrator';
+export type { Role } from './roleLogic';
 
 export interface Identity {
   userId: string;
   email: string;
   name: string;
   realRole: Role;
-  /** True when no role lists are configured, so everyone is an admin. */
-  testMode: boolean;
+  /** The configured security roles this user holds, by name. */
+  heldRoles: string[];
+  /** Why the role could not be fully determined, or null when it was. */
+  roleProblem: string | null;
 }
 
-function roleFor(email: string): { role: Role; testMode: boolean } {
-  const noneConfigured = ADMIN_EMAILS.length === 0 && STEWARD_EMAILS.length === 0;
-  if (noneConfigured) return { role: 'Directory Administrator', testMode: true };
-  const e = email.toLowerCase();
-  if (ADMIN_EMAILS.some((x) => x.toLowerCase() === e)) {
-    return { role: 'Directory Administrator', testMode: false };
-  }
-  if (STEWARD_EMAILS.some((x) => x.toLowerCase() === e)) {
-    return { role: 'Data Steward', testMode: false };
-  }
-  return { role: 'Firm User', testMode: false };
-}
+type Lookup = { userId: string; membership?: RoleMembership; error?: string };
 
 export function useRole() {
   const ctx = usePowerContext();
+  const userId = ctx.user.systemUserId ?? '';
+
+  // Tagged with the id it was read for, so a stale result is never used.
+  const [lookup, setLookup] = useState<Lookup | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    fetchRoleMembership(userId)
+      .then((membership) => { if (!cancelled) setLookup({ userId, membership }); })
+      .catch((e: Error) => { if (!cancelled) setLookup({ userId, error: e.message }); });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const current = lookup?.userId === userId ? lookup : null;
+  const loading = !!userId && current === null;
 
   const identity = useMemo<Identity>(() => {
     const email = ctx.user.userPrincipalName ?? '';
-    const { role, testMode } = roleFor(email);
+    const membership = current?.membership;
+
+    let roleProblem: string | null = null;
+    if (!userId) {
+      roleProblem = 'The host did not provide your Dataverse user id, so your '
+        + 'security roles could not be read.';
+    } else if (current?.error) {
+      roleProblem = `Your security roles could not be read (${current.error}).`;
+    } else if (membership && membership.missing.length > 0) {
+      roleProblem = `Security role not found in this environment: `
+        + `${membership.missing.join(', ')}. Check ROLE_NAMES in config.ts.`;
+    }
+
     return {
-      userId: ctx.user.systemUserId || ctx.user.objectId || '',
+      userId: userId || ctx.user.objectId || '',
       email: email || '(unknown user)',
       name: ctx.user.fullName || email || 'Signed-in user',
-      realRole: role,
-      testMode,
+      realRole: membership ? roleFromMembership(membership) : 'Firm User',
+      heldRoles: membership?.heldRoles ?? [],
+      roleProblem,
     };
-  }, [ctx]);
+  }, [ctx, userId, current]);
 
-  // Kept as a hook-shaped return so callers don't change: the host context is
-  // already resolved by the time any of this runs, so there is nothing to
-  // wait for and nothing to fail.
-  return { identity, loading: false, error: null as string | null };
+  return { identity, loading };
 }
 
 export const canEdit = (r: Role) =>

@@ -2,22 +2,17 @@
  * config.ts — everything you might want to change while testing
  * ======================================================================== */
 
-/** How roles are decided.
- *  'test'  — the email lists below. Works immediately, nothing to set up.
- *  'entra' — Microsoft Entra ID security groups. Requires an extra connector;
- *            see README section "Switching to Entra ID groups".
- */
-export const ROLE_SOURCE: 'test' | 'entra' = 'test';
-
-/** Used when ROLE_SOURCE === 'test'. Lower-case emails.
- *  Leave BOTH empty to make whoever opens the app a Directory Administrator,
- *  which is the quickest way to see every screen. */
-export const ADMIN_EMAILS: string[] = ['lklmssvc@deloitte.com','abotejue@deloitte.com'];
-export const STEWARD_EMAILS: string[] = [];
-
-/** Used when ROLE_SOURCE === 'entra'. Entra group object ids. */
-export const ADMIN_GROUP_ID = '';
-export const STEWARD_GROUP_ID = '';
+/** Dataverse security roles that grant each app role, matched by display name
+ *  (case-insensitive). A user holds a role directly or through a team. Holding
+ *  neither makes someone a Firm User, and so does any failure to read roles.
+ *
+ *  These are the same roles that carry the table privileges, so the UI follows
+ *  the real permission. Renaming a role in Dataverse means changing it here
+ *  too — until you do, the app shows a "role not found" notice. */
+export const ROLE_NAMES = {
+  admin: 'CDB Admin',
+  steward: 'CDB Data Steward',
+} as const;
 
 /** Rows per page in the result list, and the value sent as
  *  `Prefer: odata.maxpagesize`.

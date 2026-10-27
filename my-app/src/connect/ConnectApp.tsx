@@ -18,7 +18,7 @@ import { AdminScreen } from './components/AdminScreen';
 import { SchemaCheck } from './components/SchemaCheck';
 
 export default function ConnectApp() {
-  const { identity } = useRole();
+  const { identity, loading } = useRole();
   const [consent, setConsent] = useState(false);
   const [page, setPage] = useState<Page>('home');
   const [previewRole, setPreviewRole] = useState<Role | null>(null);
@@ -48,6 +48,14 @@ export default function ConnectApp() {
     return () => document.removeEventListener('connect:copy-blocked', onBlocked);
   }, []);
 
+  if (loading) {
+    return (
+      <main className="wrap section">
+        <p className="muted">Checking your access…</p>
+      </main>
+    );
+  }
+
   if (!consent) {
     return (
       <ConsentGate
@@ -67,12 +75,17 @@ export default function ConnectApp() {
         page={page}
         role={role}
         realRole={identity.realRole}
-        testMode={identity.testMode}
         onNavigate={(p) => { setPage(p); window.scrollTo(0, 0); }}
         onPreviewRole={(r) => setPreviewRole(r)}
         onSchemaCheck={() => setSchemaOpen(true)}
         showSchemaCheck={SHOW_SCHEMA_CHECK}
       />
+
+      {identity.roleProblem && (
+        <div className="wrap">
+          <div className="notice warn">{identity.roleProblem}</div>
+        </div>
+      )}
 
       {page === 'home' && <HomeScreen onSearch={search} />}
 

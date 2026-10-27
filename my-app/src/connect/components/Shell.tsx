@@ -7,7 +7,6 @@ interface ShellProps {
   page: Page;
   role: Role;
   realRole: Role;
-  testMode: boolean;
   onNavigate: (p: Page) => void;
   onPreviewRole: (r: Role) => void;
   onSchemaCheck: () => void;
@@ -17,7 +16,7 @@ interface ShellProps {
 const ROLES: Role[] = ['Firm User', 'Data Steward', 'Directory Administrator'];
 
 export function Shell({
-  page, role, realRole, testMode, onNavigate, onPreviewRole,
+  page, role, realRole, onNavigate, onPreviewRole,
   onSchemaCheck, showSchemaCheck,
 }: ShellProps) {
   return (
@@ -74,11 +73,6 @@ export function Shell({
         <span className={canCopy(role) ? 'cap on' : 'cap off'}>
           {canCopy(role) ? 'Copy' : 'Copy blocked'}
         </span>
-        {testMode && (
-          <span className="cap off" title="No role source configured — see config.ts">
-            TEST ROLES
-          </span>
-        )}
       </div>
     </>
   );
