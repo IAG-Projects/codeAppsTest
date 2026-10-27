@@ -26,7 +26,7 @@ export const ID_FIELD = 'crcf4_cdb_datamodelid' as const;
 
 /** Reads the primary key off a row without `any`. */
 export function rowId(row: ContactRow): string {
-  return (row as Record<string, unknown>)[ID_FIELD] as string;
+  return (row as unknown as Record<string, unknown>)[ID_FIELD] as string;
 }
 
 /* --- Query option types -------------------------------------------------

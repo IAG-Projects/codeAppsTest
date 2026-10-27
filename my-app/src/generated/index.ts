@@ -6,10 +6,6 @@
 // Models
 export * as CommonModels from './models/CommonModels';
 export * as Crcf4_cdb_datamodelsModel from './models/Crcf4_cdb_datamodelsModel';
-export * as SystemusersModel from './models/SystemusersModel';
-export * as WhoAmIModel from './models/WhoAmIModel';
 
 // Services
 export * from './services/Crcf4_cdb_datamodelsService';
-export * from './services/SystemusersService';
-export * from './services/WhoAmIService';

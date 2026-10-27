@@ -151,7 +151,7 @@ export function useDistinct(key: ColKey, sampleSize = 2000) {
         if (cancelled) return;
         const seen = new Set<string>();
         for (const row of result.data ?? []) {
-          const v = (row as Record<string, unknown>)[C[key].key];
+          const v = (row as unknown as Record<string, unknown>)[C[key].key];
           if (typeof v === 'string' && v.trim()) seen.add(v.trim());
         }
         setValues([...seen].sort((a, b) => a.localeCompare(b)));

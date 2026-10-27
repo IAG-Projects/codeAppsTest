@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { ContactRow } from '../dataSource';
 import { rowId } from '../dataSource';
-import { flag, text } from '../schema';
+import { displayName, flag, initialsFor, text } from '../schema';
 import { useContacts, useDistinct, type Filters } from '../useContacts';
 import { EMPTY_FILTERS } from '../useContacts';
 import { PAGE_SIZE } from '../config';
@@ -131,9 +131,9 @@ function Pick({
 }
 
 function ResultRow({ row, onOpen }: { row: ContactRow; onOpen: () => void }) {
-  const r = row as Record<string, unknown>;
-  const name = text(r, 'fullName') || text(r, 'lastName') || text(r, 'title') || '(no name)';
-  const initials = (text(r, 'initials') || name).slice(0, 2).toUpperCase();
+  const r = row as unknown as Record<string, unknown>;
+  const name = displayName(r);
+  const initials = initialsFor(r);
   const rel = text(r, 'relationship');
   return (
     <button className="result" onClick={onOpen}>

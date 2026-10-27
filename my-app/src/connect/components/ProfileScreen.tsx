@@ -1,6 +1,8 @@
-import { useState } from 'react';
-import { ContactsService, rowId, type ContactRow } from '../dataSource';
-import { AUDIT_COLUMNS, C, EDIT_COLUMNS, PROFILE_COLUMNS, flag, text } from '../schema';
+import { useEffect, useState } from 'react';
+import { ContactsService, fetchContact, rowId, type ContactRow } from '../dataSource';
+import {
+  AUDIT_COLUMNS, C, EDIT_COLUMNS, PROFILE_COLUMNS, displayName, flag, initialsFor, text,
+} from '../schema';
 import type { Role } from '../useRole';
 import { canCopy, canEdit } from '../useRole';
 import { copyText } from '../useCopyGuard';
@@ -19,9 +21,32 @@ export function ProfileScreen({
 }: ProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [drawer, setDrawer] = useState(false);
-  const r = row as Record<string, unknown>;
-  const name = text(r, 'fullName') || text(r, 'title') || '(no name)';
-  const initials = (text(r, 'initials') || name).slice(0, 2).toUpperCase();
+  // The row handed over by the result list carries only LIST_COLUMNS, so the
+  // profile re-fetches the complete record (no `select` ⇒ every column).
+  // Results are tagged with the id they were fetched for, so a stale result
+  // for a previous contact is never shown and no reset-in-effect is needed.
+  const id = rowId(row);
+  const [fetched, setFetched] = useState<{ id: string; record?: ContactRow; error?: string } | null>(null);
+  const setFull = (record: ContactRow) => setFetched({ id, record });
+  const full = fetched?.id === id ? fetched.record ?? null : null;
+  const loadError = fetched?.id === id ? fetched.error ?? '' : '';
+  const loadingFull = fetched?.id !== id;
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchContact(id)
+      .then((record) => { if (!cancelled) setFetched({ id, record }); })
+      .catch((e: Error) => { if (!cancelled) setFetched({ id, error: e.message }); });
+    return () => { cancelled = true; };
+  }, [id]);
+
+  // Editing and contributing need the full record: they diff against it and
+  // append to `comments`, neither of which is on a list row.
+  const current = full ?? row;
+  const ready = full !== null;
+  const r = current as unknown as Record<string, unknown>;
+  const name = displayName(r);
+  const initials = initialsFor(r);
 
   const doCopy = async () => {
     const line = [name, text(r, 'email'), text(r, 'phone')]
@@ -50,11 +75,11 @@ export function ProfileScreen({
         <div className="row" style={{ position: 'relative', zIndex: 2 }}>
           {canCopy(role) && <button className="btn dark" onClick={doCopy}>Copy contact</button>}
           {canEdit(role) && (
-            <button className="btn green" onClick={() => setEditing((v) => !v)}>
+            <button className="btn green" onClick={() => setEditing((v) => !v)} disabled={!ready}>
               {editing ? 'Cancel edit' : 'Edit contact'}
             </button>
           )}
-          <button className="btn" onClick={() => setDrawer(true)}>Contribute</button>
+          <button className="btn" onClick={() => setDrawer(true)} disabled={!ready}>Contribute</button>
         </div>
       </section>
 
@@ -65,11 +90,18 @@ export function ProfileScreen({
         </div>
       )}
 
-      {editing ? (
+      {loadingFull && <p className="muted" style={{ marginTop: 16 }}>Loading full record…</p>}
+      {loadError && (
+        <div className="notice bad" style={{ marginTop: 16 }}>
+          Could not load the full record: {loadError}
+        </div>
+      )}
+
+      {editing && ready ? (
         <EditForm
-          row={row}
+          row={current}
           onCancel={() => setEditing(false)}
-          onSaved={(updated) => { setEditing(false); onChanged(updated); notify('Saved.'); }}
+          onSaved={(updated) => { setEditing(false); setFull(updated); onChanged(updated); notify('Saved.'); }}
           onError={(m) => notify(`Could not save: ${m}`)}
           viewerEmail={viewerEmail}
         />
@@ -110,13 +142,13 @@ export function ProfileScreen({
         </div>
       )}
 
-      {drawer && (
+      {drawer && ready && (
         <ContributeDrawer
-          row={row}
+          row={current}
           viewerEmail={viewerEmail}
           onClose={() => setDrawer(false)}
           onSaved={(updated) => {
-            setDrawer(false); onChanged(updated);
+            setDrawer(false); setFull(updated); onChanged(updated);
             notify('Thank you — sent for review.');
           }}
           onError={(m) => notify(`Could not save: ${m}`)}
@@ -136,7 +168,7 @@ function EditForm({
   onError: (m: string) => void;
   viewerEmail: string;
 }) {
-  const r = row as Record<string, unknown>;
+  const r = row as unknown as Record<string, unknown>;
   const [draft, setDraft] = useState<Record<string, string>>(() =>
     Object.fromEntries(EDIT_COLUMNS.map((k) => [k, text(r, k)])),
   );
@@ -205,7 +237,7 @@ function ContributeDrawer({
 }) {
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const r = row as Record<string, unknown>;
+  const r = row as unknown as Record<string, unknown>;
 
   const submit = async () => {
     setSaving(true);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ContactsService, rowId, type ContactRow } from '../dataSource';
-import { C, text } from '../schema';
+import { C, displayName, text } from '../schema';
 import { useContacts, EMPTY_FILTERS } from '../useContacts';
 import { exportFiltered } from '../exportCsv';
 import { EXPORT_LIMIT, ROLE_SOURCE } from '../config';
@@ -119,12 +119,12 @@ export function AdminScreen({ identity, role, onOpen, notify }: AdminScreenProps
         )}
         <div className="no-copy">
           {flagged.rows.map((row) => {
-            const r = row as Record<string, unknown>;
+            const r = row as unknown as Record<string, unknown>;
             const id = rowId(row);
             return (
               <div className="result" key={id}>
                 <div className="body">
-                  <div className="name">{text(r, 'fullName') || '(no name)'}</div>
+                  <div className="name">{displayName(r)}</div>
                   <div className="muted">{text(r, 'entity')}</div>
                 </div>
                 <div className="row">

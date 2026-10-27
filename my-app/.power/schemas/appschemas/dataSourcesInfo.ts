@@ -11,30 +11,5 @@ export const dataSourcesInfo = {
     "primaryKey": "crcf4_cdb_datamodelid",
     "dataSourceType": "Dataverse",
     "apis": {}
-  },
-  "systemusers": {
-    "tableId": "",
-    "version": "",
-    "primaryKey": "systemuserid",
-    "dataSourceType": "Dataverse",
-    "apis": {}
-  },
-  "whoami": {
-    "tableId": "",
-    "version": "",
-    "primaryKey": "",
-    "dataSourceType": "Dataverse",
-    "apis": {
-      "WhoAmI": {
-        "path": "/api/data/v9.2/WhoAmI",
-        "method": "GET",
-        "parameters": [],
-        "responseInfo": {
-          "200": {
-            "type": "object"
-          }
-        }
-      }
-    }
   }
 };

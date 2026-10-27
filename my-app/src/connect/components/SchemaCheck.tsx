@@ -31,7 +31,7 @@ export function SchemaCheck({ onClose }: { onClose: () => void }) {
         const result = (await ContactsService.getAll({
           top: 1,
         })) as OperationResult<ContactRow[]>;
-        const row = (result.data ?? [])[0] as Record<string, unknown> | undefined;
+        const row = (result.data ?? [])[0] as unknown as Record<string, unknown> | undefined;
         if (!row) {
           setError('The table returned no rows, so the columns cannot be checked. Add one record and try again.');
           return;

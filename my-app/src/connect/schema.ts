@@ -87,6 +87,26 @@ export function flag(row: Record<string, unknown>, k: ColKey): boolean {
   return row[C[k].key] === true;
 }
 
+const NO_NAME = '(no name)';
+
+/** The single definition of how a contact is labelled. Every column read here
+ *  MUST be in LIST_COLUMNS — a column outside it is absent from list rows, so a
+ *  fallback on it silently never fires. */
+export function displayName(row: Record<string, unknown>): string {
+  const t = (k: ColKey) => text(row, k).trim();
+  const full = t('fullName');
+  if (full) return full;
+  const joined = [t('firstName'), t('lastName')].filter(Boolean).join(' ');
+  return joined || t('callingName') || t('title') || NO_NAME;
+}
+
+/** Two-letter avatar text: the Initials column, else the start of the name. */
+export function initialsFor(row: Record<string, unknown>): string {
+  const given = text(row, 'initials').trim();
+  const name = displayName(row);
+  return (given || (name === NO_NAME ? '?' : name)).slice(0, 2).toUpperCase();
+}
+
 /** Columns fetched for the result list — keep `select` tight, per MS guidance. */
 export const LIST_COLUMNS: ColKey[] = [
   'fullName', 'firstName', 'lastName', 'callingName', 'title', 'initials',

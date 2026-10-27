@@ -21,7 +21,7 @@ export function toCsv(rows: ContactRow[]): string {
   const header = EXPORT_COLUMNS.map((k) => cell(C[k].label)).join(',');
   const body = rows.map((row) =>
     EXPORT_COLUMNS
-      .map((k) => cell(text(row as Record<string, unknown>, k)))
+      .map((k) => cell(text(row as unknown as Record<string, unknown>, k)))
       .join(','),
   );
   // The BOM makes Excel read the file as UTF-8 instead of the system codepage,
