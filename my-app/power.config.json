@@ -11,5 +11,26 @@
   "localAppUrl": "http://localhost:3000",
   "logoPath": "Default",
   "connectionReferences": {},
-  "databaseReferences": {}
+  "databaseReferences": {
+    "default.cds": {
+      "dataSources": {
+        "cdb_datamodels": {
+          "entitySetName": "crcf4_cdb_datamodels",
+          "logicalName": "crcf4_cdb_datamodel",
+          "isHidden": false
+        },
+        "environment_39a902ba": {
+          "entitySetName": "Environment",
+          "logicalName": "environment_39a902ba",
+          "isHidden": false
+        },
+        "users": {
+          "entitySetName": "systemusers",
+          "logicalName": "systemuser",
+          "isHidden": false
+        }
+      },
+      "environmentVariableName": ""
+    }
+  }
 }
