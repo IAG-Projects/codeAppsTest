@@ -113,7 +113,7 @@ export function ProfileScreen({
         />
       ) : (
         <div className="grid2" style={{ marginTop: 24 }}>
-          <article className="card no-copy">
+          <article className={`card${canCopy(role) ? '' : ' no-copy'}`}>
             <div className="head">CONTACT DETAILS</div>
             {PROFILE_COLUMNS.map((k) => {
               const value = C[k].kind === 'bool'
@@ -329,30 +329,69 @@ function HistoryTimeline({ contactId }: { contactId: string }) {
     return <p className="muted">No field changes have been recorded.</p>;
   }
 
+  const events = groupHistoryEvents(current.rows);
   return (
-    <div className="audit-list">
-      {current.rows.map((item) => (
-        <article className="audit-entry" key={item.crcf4_cdbfieldchangehistoryid}>
-          <div className="audit-entry-head">
-            <b>{item.crcf4_fieldlabel || item.crcf4_fieldname}</b>
-            <time dateTime={item.crcf4_changedon}>
-              {formatAuditDate(item.crcf4_changedon ?? '')}
-            </time>
-          </div>
-          <div className="muted">
-            {item.crcf4_changedbyname} · {item.crcf4_changedbyemail}
-          </div>
-          <div className="audit-values">
-            <div><small>BEFORE</small><span>{item.crcf4_beforevalue || '(empty)'}</span></div>
-            <div><small>AFTER</small><span>{item.crcf4_aftervalue || '(empty)'}</span></div>
-          </div>
-        </article>
+    <ol className="audit-timeline">
+      {events.map((event, index) => (
+        <li className="audit-event" key={event.key}>
+          <span className={`audit-marker${index === 0 ? ' latest' : ''}`} aria-hidden="true" />
+          <time className="audit-date" dateTime={event.changedOn}>
+            {formatAuditDate(event.changedOn)}
+          </time>
+          <b className="audit-actor">{event.actorName || event.actorEmail}</b>
+          {event.actorName && event.actorEmail && event.actorName !== event.actorEmail && (
+            <span className="muted audit-email">{event.actorEmail}</span>
+          )}
+          <ul className="audit-changes">
+            {event.rows.map((item) => (
+              <li key={item.crcf4_cdbfieldchangehistoryid}>
+                <b>{item.crcf4_fieldlabel || item.crcf4_fieldname}</b>
+                <div className="audit-values">
+                  <div><small>BEFORE</small><span>{item.crcf4_beforevalue || '(empty)'}</span></div>
+                  <div><small>AFTER</small><span>{item.crcf4_aftervalue || '(empty)'}</span></div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </li>
       ))}
-    </div>
+    </ol>
   );
+}
+
+function groupHistoryEvents(rows: FieldChangeHistoryRow[]) {
+  const groups = new Map<string, {
+    key: string;
+    changedOn: string;
+    actorName: string;
+    actorEmail: string;
+    rows: FieldChangeHistoryRow[];
+  }>();
+
+  for (const row of rows) {
+    const changedOn = row.crcf4_changedon ?? '';
+    const actorEmail = row.crcf4_changedbyemail ?? '';
+    const key = `${changedOn}\u0000${actorEmail}`;
+    const group = groups.get(key);
+    if (group) {
+      group.rows.push(row);
+    } else {
+      groups.set(key, {
+        key,
+        changedOn,
+        actorName: row.crcf4_changedbyname ?? '',
+        actorEmail,
+        rows: [row],
+      });
+    }
+  }
+
+  return [...groups.values()];
 }
 
 function formatAuditDate(value: string): string {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
 }
