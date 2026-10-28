@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { ContactsService, rowId, type ContactRow } from '../dataSource';
+import { rowId, type ContactRow } from '../dataSource';
+import { updateContactWithHistory } from '../fieldChangeHistory';
 import { C, displayName, text } from '../schema';
 import { useContacts, EMPTY_FILTERS } from '../useContacts';
 import { exportFiltered } from '../exportCsv';
@@ -39,12 +40,11 @@ export function AdminScreen({ identity, role, onOpen, notify }: AdminScreenProps
         [C.validatedBy.key]: identity.email,
         [C.validatedDate.key]: new Date().toISOString().slice(0, 10),
       };
-      const result = await ContactsService.update(id, changes);
-      if (!result.success && result.error) throw new Error(result.error.message);
+      await updateContactWithHistory(row, changes, identity);
       notify('Marked reviewed.');
       flagged.reload();
     } catch (err) {
-      notify(`Could not update: ${(err as Error).message}`);
+      notify((err as Error).message);
     } finally {
       setBusy(null);
     }

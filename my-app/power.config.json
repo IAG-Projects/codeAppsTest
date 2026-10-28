@@ -43,6 +43,11 @@
           "entitySetName": "teamrolescollection",
           "logicalName": "teamroles",
           "isHidden": false
+        },
+        "cdbfieldchangehistories": {
+          "entitySetName": "crcf4_cdbfieldchangehistories",
+          "logicalName": "crcf4_cdbfieldchangehistory",
+          "isHidden": false
         }
       },
       "environmentVariableName": ""

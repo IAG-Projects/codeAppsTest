@@ -12,6 +12,13 @@ export const dataSourcesInfo = {
     "dataSourceType": "Dataverse",
     "apis": {}
   },
+  "crcf4_cdbfieldchangehistories": {
+    "tableId": "",
+    "version": "",
+    "primaryKey": "crcf4_cdbfieldchangehistoryid",
+    "dataSourceType": "Dataverse",
+    "apis": {}
+  },
   "roles": {
     "tableId": "",
     "version": "",

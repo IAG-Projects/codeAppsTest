@@ -45,6 +45,41 @@ export default defineConfig([
 ])
 ```
 
+## Per-field audit history
+
+The app writes one `crcf4_cdbfieldchangehistory` Dataverse row per changed contact
+field. Before enabling the feature in an environment, create the
+**CDB Field Change History** table with these logical columns (using the
+environment's `crcf4` publisher prefix):
+
+| Logical name | Type | Purpose |
+| --- | --- | --- |
+| `crcf4_fieldname` | Text (primary name) | Changed column's logical name |
+| `crcf4_contactrecordid` | Text | Contact row ID (`crcf4_cdb_datamodelid`) |
+| `crcf4_changedbyname` | Text | Person who made the change |
+| `crcf4_changedbyemail` | Text | Person's email |
+| `crcf4_fieldlabel` | Text | Display label for the changed column |
+| `crcf4_beforevalue` | Multiple lines of text | Value before the change |
+| `crcf4_aftervalue` | Multiple lines of text | Value after the change |
+| `crcf4_changedon` | Date and time (time-zone independent) | UTC change time |
+
+Add the table to the Code App Dataverse data sources with
+`pa app add data-source --connector dataverse --table crcf4_cdbfieldchangehistory`
+and regenerate the app's data-source metadata before publishing. The profile
+shows the timeline only to Data Stewards and Directory Administrators. Grant
+Create (organization scope) to roles that can make app changes, and grant Read
+(organization scope) only to those two privileged roles; do not grant Update
+or Delete. The history includes personal data, so use the same environment
+governance and retention controls as the contact table.
+
+This app records changes made through its Edit Contact, Contribute, and Mark
+reviewed flows. The contact's "Last updated on" value is updated as part of
+these operations but is not stored as a separate field-history entry. It is not
+a tamper-proof replacement for Dataverse auditing:
+changes made outside the app are not captured by this client-side history.
+Enable native Dataverse auditing or a server-side plug-in if the record must be
+authoritative or complete.
+
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js

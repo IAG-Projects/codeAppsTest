@@ -1,23 +1,17 @@
-import type { Role } from '../useRole';
-import { canCopy, canEdit, canExport } from '../useRole';
+import { canExport, type Role } from '../useRole';
 
 export type Page = 'home' | 'search' | 'profile' | 'admin';
 
 interface ShellProps {
   page: Page;
   role: Role;
-  realRole: Role;
   onNavigate: (p: Page) => void;
-  onPreviewRole: (r: Role) => void;
   onSchemaCheck: () => void;
   showSchemaCheck: boolean;
 }
 
-const ROLES: Role[] = ['Firm User', 'Data Steward', 'Directory Administrator'];
-
 export function Shell({
-  page, role, realRole, onNavigate, onPreviewRole,
-  onSchemaCheck, showSchemaCheck,
+  page, role, onNavigate, onSchemaCheck, showSchemaCheck,
 }: ShellProps) {
   return (
     <>
@@ -47,33 +41,6 @@ export function Shell({
           )}
         </nav>
       </header>
-
-      <div className="rolebar">
-        <b>ROLE</b>
-        {realRole === 'Directory Administrator' ? (
-          <div className="seg">
-            {ROLES.map((r) => (
-              <button
-                key={r}
-                className={role === r ? 'active' : ''}
-                onClick={() => onPreviewRole(r)}
-              >{r}</button>
-            ))}
-          </div>
-        ) : (
-          <span className="muted">{role}</span>
-        )}
-        <span className="cap on">View all</span>
-        <span className={canEdit(role) ? 'cap on' : 'cap off'}>
-          {canEdit(role) ? 'Edit' : 'No edit'}
-        </span>
-        <span className={canExport(role) ? 'cap on' : 'cap off'}>
-          {canExport(role) ? 'Export' : 'No export'}
-        </span>
-        <span className={canCopy(role) ? 'cap on' : 'cap off'}>
-          {canCopy(role) ? 'Copy' : 'Copy blocked'}
-        </span>
-      </div>
     </>
   );
 }

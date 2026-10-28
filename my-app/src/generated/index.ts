@@ -6,6 +6,7 @@
 // Models
 export * as CommonModels from './models/CommonModels';
 export * as Crcf4_cdb_datamodelsModel from './models/Crcf4_cdb_datamodelsModel';
+export * as Crcf4_cdbfieldchangehistoriesModel from './models/Crcf4_cdbfieldchangehistoriesModel';
 export * as RolesModel from './models/RolesModel';
 export * as SystemuserrolescollectionModel from './models/SystemuserrolescollectionModel';
 export * as TeammembershipsModel from './models/TeammembershipsModel';
@@ -13,6 +14,7 @@ export * as TeamrolescollectionModel from './models/TeamrolescollectionModel';
 
 // Services
 export * from './services/Crcf4_cdb_datamodelsService';
+export * from './services/Crcf4_cdbfieldchangehistoriesService';
 export * from './services/RolesService';
 export * from './services/SystemuserrolescollectionService';
 export * from './services/TeammembershipsService';

@@ -52,19 +52,6 @@ nav.app button {
 nav.app button:hover { color: #fff; background: #ffffff14; }
 nav.app button[aria-current="page"] { color: #fff; background: #ffffff1f; }
 
-.rolebar {
-  position: sticky; top: 64px; z-index: 19; background: var(--ok-bg);
-  border-bottom: 1px solid #c9d9b3; padding: 8px clamp(16px, 4vw, 40px);
-  display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
-}
-.rolebar b { font-size: 10px; letter-spacing: .12em; color: var(--green-dk); }
-.seg { background: #fff; border: 1px solid #aab99a; border-radius: 999px; padding: 3px; display: flex; }
-.seg button { border: 0; background: none; border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 700; color: var(--ink-soft); }
-.seg button.active { background: var(--green-dk); color: #fff; }
-.cap { font-size: 10px; font-weight: 800; border-radius: 999px; padding: 5px 9px; border: 1px solid; }
-.cap.on { background: var(--ok-bg); color: var(--green-dk); border-color: #cfe2b5; }
-.cap.off { background: #f4f4f4; color: #777; border-color: #ddd; }
-
 /* ------------------------------------------------------------- structure */
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 40px); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 24px; }
@@ -139,6 +126,14 @@ h1.title { font-size: clamp(20px, 3vw, 30px); margin: 0 0 6px; }
 .info { border-bottom: 1px solid var(--line); padding: 12px 0; }
 .info small { display: block; font-size: 10px; font-weight: 900; letter-spacing: .1em; color: var(--ink-soft); margin-bottom: 4px; }
 .info b { font-size: 15px; font-weight: 600; }
+.audit-list { margin-top: 16px; }
+.audit-entry { padding: 14px 0; border-top: 1px solid var(--line); }
+.audit-entry-head { display: flex; justify-content: space-between; gap: 12px; }
+.audit-entry-head time { color: var(--ink-soft); font-size: 12px; text-align: right; }
+.audit-values { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.audit-values div { min-width: 0; }
+.audit-values small { display: block; font-size: 9px; font-weight: 900; letter-spacing: .1em; color: var(--ink-soft); }
+.audit-values span { display: block; overflow-wrap: anywhere; white-space: pre-wrap; font-size: 13px; margin-top: 3px; }
 .watermark {
   position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none;
   font-size: clamp(18px, 4vw, 34px); font-weight: 900; color: #0909090f;

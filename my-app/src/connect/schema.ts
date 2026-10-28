@@ -63,8 +63,8 @@ export const C = {
 
   created:         { key: 'crcf4_field_24', label: 'Created',       kind: 'datetime' },
   modified:        { key: 'crcf4_field_27', label: 'Modified',      kind: 'text' },
-  validatedBy:     { key: 'crcf4_remarks',   label: 'Validated by',  kind: 'text' },
-  validatedDate:   { key: 'crcf4_remarksby', label: 'Validated on',  kind: 'date' },
+  validatedBy:     { key: 'crcf4_remarks',   label: 'Last updated by', kind: 'text' },
+  validatedDate:   { key: 'crcf4_remarksby', label: 'Last updated on', kind: 'date' },
   audit:           { key: 'crcf4_field_23', label: 'Audit',         kind: 'text' },
   dataSource:      { key: 'crcf4_field_29', label: 'Source',        kind: 'text' },
 } as const satisfies Record<string, Col>;

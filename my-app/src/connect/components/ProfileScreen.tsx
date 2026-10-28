@@ -1,15 +1,21 @@
 import { useEffect, useState } from 'react';
-import { ContactsService, fetchContact, rowId, type ContactRow } from '../dataSource';
+import { fetchContact, rowId, type ContactRow } from '../dataSource';
 import {
   AUDIT_COLUMNS, C, EDIT_COLUMNS, PROFILE_COLUMNS, displayName, flag, initialsFor, text,
 } from '../schema';
 import type { Role } from '../useRole';
 import { canCopy, canEdit } from '../useRole';
 import { copyText } from '../useCopyGuard';
+import {
+  fetchFieldChangeHistory,
+  updateContactWithHistory,
+  type FieldChangeHistory as FieldChangeHistoryRow,
+} from '../fieldChangeHistory';
 
 interface ProfileScreenProps {
   row: ContactRow;
   role: Role;
+  viewerName: string;
   viewerEmail: string;
   onBack: () => void;
   onChanged: (row: ContactRow) => void;
@@ -17,7 +23,7 @@ interface ProfileScreenProps {
 }
 
 export function ProfileScreen({
-  row, role, viewerEmail, onBack, onChanged, notify,
+  row, role, viewerName, viewerEmail, onBack, onChanged, notify,
 }: ProfileScreenProps) {
   const [editing, setEditing] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -102,8 +108,8 @@ export function ProfileScreen({
           row={current}
           onCancel={() => setEditing(false)}
           onSaved={(updated) => { setEditing(false); setFull(updated); onChanged(updated); notify('Saved.'); }}
-          onError={(m) => notify(`Could not save: ${m}`)}
-          viewerEmail={viewerEmail}
+          onError={notify}
+          actor={{ name: viewerName, email: viewerEmail }}
         />
       ) : (
         <div className="grid2" style={{ marginTop: 24 }}>
@@ -134,10 +140,13 @@ export function ProfileScreen({
                 </div>
               );
             })}
-            <p className="muted" style={{ marginTop: 14 }}>
-              These are the audit fields the table already carries. A per-field
-              change history would need its own table.
-            </p>
+            {canEdit(role) ? (
+              <HistoryTimeline contactId={id} />
+            ) : (
+              <p className="muted" style={{ marginTop: 14 }}>
+                Per-field change history is available to Data Stewards and Directory Administrators.
+              </p>
+            )}
           </aside>
         </div>
       )}
@@ -145,13 +154,13 @@ export function ProfileScreen({
       {drawer && ready && (
         <ContributeDrawer
           row={current}
-          viewerEmail={viewerEmail}
+          actor={{ name: viewerName, email: viewerEmail }}
           onClose={() => setDrawer(false)}
           onSaved={(updated) => {
             setDrawer(false); setFull(updated); onChanged(updated);
             notify('Thank you — sent for review.');
           }}
-          onError={(m) => notify(`Could not save: ${m}`)}
+          onError={notify}
         />
       )}
     </main>
@@ -160,13 +169,13 @@ export function ProfileScreen({
 
 /* ------------------------------------------------------------------ edit */
 function EditForm({
-  row, onCancel, onSaved, onError, viewerEmail,
+  row, onCancel, onSaved, onError, actor,
 }: {
   row: ContactRow;
   onCancel: () => void;
   onSaved: (r: ContactRow) => void;
   onError: (m: string) => void;
-  viewerEmail: string;
+  actor: { name: string; email: string };
 }) {
   const r = row as unknown as Record<string, unknown>;
   const [draft, setDraft] = useState<Record<string, string>>(() =>
@@ -184,11 +193,10 @@ function EditForm({
         if (draft[k] !== text(r, k)) changes[C[k].key] = draft[k];
       }
       if (Object.keys(changes).length === 0) { onCancel(); return; }
-      changes[C.validatedBy.key] = viewerEmail;
+      changes[C.validatedBy.key] = actor.email;
       changes[C.validatedDate.key] = new Date().toISOString().slice(0, 10);
 
-      const result = await ContactsService.update(rowId(row), changes);
-      if (!result.success && result.error) throw new Error(result.error.message);
+      await updateContactWithHistory(row, changes, actor);
       onSaved({ ...row, ...changes } as ContactRow);
     } catch (err) {
       onError((err as Error).message);
@@ -227,10 +235,10 @@ function EditForm({
 
 /* -------------------------------------------------------------- contribute */
 function ContributeDrawer({
-  row, viewerEmail, onClose, onSaved, onError,
+  row, actor, onClose, onSaved, onError,
 }: {
   row: ContactRow;
-  viewerEmail: string;
+  actor: { name: string; email: string };
   onClose: () => void;
   onSaved: (r: ContactRow) => void;
   onError: (m: string) => void;
@@ -245,15 +253,14 @@ function ContributeDrawer({
       const stamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
       const appended = [
         text(r, 'comments'),
-        `[${stamp} ${viewerEmail}] ${note.trim()}`,
+        `[${stamp} ${actor.email}] ${note.trim()}`,
       ].filter(Boolean).join('\n').slice(0, 2000);
 
       const changes: Record<string, unknown> = {
         [C.comments.key]: appended,
         [C.needsAttention.key]: true,
       };
-      const result = await ContactsService.update(rowId(row), changes);
-      if (!result.success && result.error) throw new Error(result.error.message);
+      await updateContactWithHistory(row, changes, actor);
       onSaved({ ...row, ...changes } as ContactRow);
     } catch (err) {
       onError((err as Error).message);
@@ -294,4 +301,58 @@ function ContributeDrawer({
       </aside>
     </>
   );
+}
+
+function HistoryTimeline({ contactId }: { contactId: string }) {
+  const [history, setHistory] = useState<{
+    contactId: string;
+    rows?: FieldChangeHistoryRow[];
+    error?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchFieldChangeHistory(contactId)
+      .then((rows) => { if (!cancelled) setHistory({ contactId, rows }); })
+      .catch((error: Error) => {
+        if (!cancelled) setHistory({ contactId, error: error.message });
+      });
+    return () => { cancelled = true; };
+  }, [contactId]);
+
+  const current = history?.contactId === contactId ? history : null;
+  if (!current) return <p className="muted">Loading field change history…</p>;
+  if (current.error) {
+    return <div className="notice bad">Could not load field change history: {current.error}</div>;
+  }
+  if (!current.rows?.length) {
+    return <p className="muted">No field changes have been recorded.</p>;
+  }
+
+  return (
+    <div className="audit-list">
+      {current.rows.map((item) => (
+        <article className="audit-entry" key={item.crcf4_cdbfieldchangehistoryid}>
+          <div className="audit-entry-head">
+            <b>{item.crcf4_fieldlabel || item.crcf4_fieldname}</b>
+            <time dateTime={item.crcf4_changedon}>
+              {formatAuditDate(item.crcf4_changedon ?? '')}
+            </time>
+          </div>
+          <div className="muted">
+            {item.crcf4_changedbyname} · {item.crcf4_changedbyemail}
+          </div>
+          <div className="audit-values">
+            <div><small>BEFORE</small><span>{item.crcf4_beforevalue || '(empty)'}</span></div>
+            <div><small>AFTER</small><span>{item.crcf4_aftervalue || '(empty)'}</span></div>
+          </div>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+function formatAuditDate(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }

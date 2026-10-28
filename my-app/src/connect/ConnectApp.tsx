@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import './connect.css';
 import { SHOW_SCHEMA_CHECK } from './config';
-import { useRole, canCopy, type Role } from './useRole';
+import { useRole, canCopy } from './useRole';
 import { useCopyGuard } from './useCopyGuard';
 import { EMPTY_FILTERS, type Filters } from './useContacts';
 import type { ContactRow } from './dataSource';
@@ -21,13 +21,12 @@ export default function ConnectApp() {
   const { identity, loading } = useRole();
   const [consent, setConsent] = useState(false);
   const [page, setPage] = useState<Page>('home');
-  const [previewRole, setPreviewRole] = useState<Role | null>(null);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [selected, setSelected] = useState<ContactRow | null>(null);
   const [schemaOpen, setSchemaOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const role: Role = previewRole ?? identity.realRole;
+  const role = identity.realRole;
 
   // The copy guard is on for everyone except a Directory Administrator.
   useCopyGuard(!canCopy(role));
@@ -74,9 +73,7 @@ export default function ConnectApp() {
       <Shell
         page={page}
         role={role}
-        realRole={identity.realRole}
         onNavigate={(p) => { setPage(p); window.scrollTo(0, 0); }}
-        onPreviewRole={(r) => setPreviewRole(r)}
         onSchemaCheck={() => setSchemaOpen(true)}
         showSchemaCheck={SHOW_SCHEMA_CHECK}
       />
@@ -103,6 +100,7 @@ export default function ConnectApp() {
         <ProfileScreen
           row={selected}
           role={role}
+          viewerName={identity.name}
           viewerEmail={identity.email}
           onBack={() => setPage('search')}
           onChanged={setSelected}
